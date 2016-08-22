@@ -1,6 +1,5 @@
 #include <cstdlib>
 #include <ctime>
-//#include <cstdio>
 #include <string>
 #include <iostream>
 #include <iomanip>
@@ -9,11 +8,12 @@
 using namespace std;
 
 const int countData = 7;
-const int countSort = 2; 
+const int countSort = 3; 
 
 enum Sortings {
 	ChoiceSort,
-	BubbleSort
+	BubbleSort,
+	ShakerSort
 };
 
 struct StatSorting{
@@ -33,7 +33,7 @@ struct Statistics {
 */
 void ChoiceSorting(int *arr, int size, int indx) {
 	int min, c;
-	clock_t start, end;
+	clock_t start;
 	int countSwap = 0;
 	int countCompare = 0;
 
@@ -53,7 +53,6 @@ void ChoiceSorting(int *arr, int size, int indx) {
 			countSwap++;
 		}
 	}
-	end = clock();
 	dataStatSorting[ChoiceSort].name = "ChoiceSort";
 	dataStatSorting[ChoiceSort].dataSorting[indx].time = (clock() - start) / (float)CLK_TCK;
 	dataStatSorting[ChoiceSort].dataSorting[indx].countCompare = countCompare;
@@ -63,7 +62,7 @@ void ChoiceSorting(int *arr, int size, int indx) {
 /* сортировка пузырьком
 */
 void BubbleSorting(int *arr, int size, int indx) {
-	clock_t start, end;
+	clock_t start;
 	int countSwap = 0;
 	int countCompare = 0;
 	bool check = true;
@@ -83,7 +82,6 @@ void BubbleSorting(int *arr, int size, int indx) {
 		}
 		size--; // сдвигаем правую границу, т.к. самый большой эл-т будет сдвинут вправо
 	} 
-	end = clock();
 	dataStatSorting[BubbleSort].name = "BubbleSort";
 	dataStatSorting[BubbleSort].dataSorting[indx].time = (clock() - start) / (float)CLK_TCK;
 	dataStatSorting[BubbleSort].dataSorting[indx].countCompare = countCompare;
@@ -96,6 +94,50 @@ void ReverseData(int *arr, int size) {
 		arr[j] = arr[i];
 		arr[i] = c;
 	}
+}
+/* шейкерная сортировка
+   1) прогоняем самый большой до правой границы, смещаем правую границу на 1 элемент
+   2) идем обратно и прогоняем, самый маленький до левой границы, смещаем левую границу на 1 элемент
+   3) повторяем поочередно п.1 и п.2 до тех пор, пока есть, что перемещать или пока границы не сойдутся
+*/
+void ShakerSorting(int *arr, int size, int indx) {
+	clock_t start;
+	int countSwap = 0;
+	int countCompare = 0;
+	bool check = true, isRight = true;
+	int a = 0, b = size;
+
+	start = clock();
+	while (a < b && check) {
+		check = false;
+		if (isRight) {
+			for (int i = a; i < b - 1; i++) {
+				if (arr[i] > arr[i + 1]){
+					int c = arr[i];
+					arr[i] = arr[i+1];
+					arr[i+1] = c;
+					check = true;
+				}
+			}
+			b--;
+		}
+		else {
+			for (int i = b - 1; i > a; i--) {
+				if (arr[i] < arr[i - 1]) {
+					int c = arr[i];
+					arr[i] = arr[i-1];
+					arr[i-1] = c;
+					check = true;
+				}
+			}
+			a++;
+		}
+		isRight = !isRight;
+	}
+	dataStatSorting[ShakerSort].name = "ShakerSort";
+	dataStatSorting[ShakerSort].dataSorting[indx].time = (clock() - start) / (float)CLK_TCK;
+	dataStatSorting[ShakerSort].dataSorting[indx].countCompare = countCompare;
+	dataStatSorting[ShakerSort].dataSorting[indx].countSwap = countSwap;
 }
 
 void PrintData(int size) {
@@ -143,6 +185,8 @@ void main() {
 			ChoiceSorting(arr, sizes[i], j);
 			memcpy(arr, tmpArr, sizeof(int) * sizes[i]);
 			BubbleSorting(arr, sizes[i], j);
+			memcpy(arr, tmpArr, sizeof(int) * sizes[i]);
+			ShakerSorting(arr, sizes[i], j);
 		}
 		delete[] arr;
 		delete[] tmpArr;
